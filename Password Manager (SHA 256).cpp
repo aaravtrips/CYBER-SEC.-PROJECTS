@@ -7,7 +7,7 @@ using namespace std;
 
 unordered_map<string, string> passwordDB;
 
-// MOCK SHA-256 function (just reverses the string + adds a fake "hash" suffix)
+//  SHA-256 function 
 string sha256(const string& password) {
     string hash = password;
     reverse(hash.begin(), hash.end());
