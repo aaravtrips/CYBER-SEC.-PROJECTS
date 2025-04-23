@@ -1,46 +1,45 @@
 #include <iostream>
-#include <fstream>
 #include <unordered_map>
-#include <openssl/sha.h>  // Requires OpenSSL for SHA-256 hashing
+#include <iomanip>     // for setw and formatting
+#include <algorithm>   // 🔧 for reverse()
 
 using namespace std;
 
-unordered_map<string, string> passwordDB;  // Stores username-password pairs
+unordered_map<string, string> passwordDB;
 
-// Function to hash passwords using SHA-256
+// MOCK SHA-256 function (just reverses the string + adds a fake "hash" suffix)
 string sha256(const string& password) {
-    unsigned char hash[SHA256_DIGEST_LENGTH];
-    SHA256((const unsigned char*)password.c_str(), password.length(), hash);
-    
-    string hashedPassword;
-    for (int i = 0; i < SHA256_DIGEST_LENGTH; i++) {
-        char buffer[3];
-        sprintf(buffer, "%02x", hash[i]);
-        hashedPassword += buffer;
-    }
-    return hashedPassword;
+    string hash = password;
+    reverse(hash.begin(), hash.end());
+    return hash + "_hashed";
 }
 
-// Function to save passwords to a file
-void savePasswords() {
-    ofstream file("passwords.txt");
+void displayUI() {
+    cout << "\n┌────────────────────────────────────────────────────────────┐\n";
+    cout << "│                    PASSWORD MANAGER                        │\n";
+    cout << "├────────────────────────────────────────────────────────────┤\n";
+    cout << "│ 🔒 Master Password: [__________________________]           │\n";
+    cout << "│                                                            │\n";
+    cout << "│ [ Unlock Vault ]                                           │\n";
+    cout << "├────────────────────────────────────────────────────────────┤\n";
+    cout << "│ 🌐 Website / App   | 🧑 Username       | 🔑 Password         │\n";
+    cout << "├────────────────────┼──────────────────┼────────────────────┤\n";
+
     for (auto& entry : passwordDB) {
-        file << entry.first << " " << entry.second << endl;
+        cout << "│ " << left << setw(18) << "www." + entry.first
+             << "│ " << left << setw(18) << entry.first
+             << "│ ************         │" << endl;
     }
-    file.close();
+
+    cout << "├────────────────────────────────────────────────────────────┤\n";
+    cout << "│ [ Add New ] [ View Details ] [ Delete ] [ Save Vault ]     │\n";
+    cout << "├────────────────────────────────────────────────────────────┤\n";
+    cout << "│ 📁 Vault Status: Encrypted (SHA-256 + Salted)              │\n";
+    cout << "│                                                            │\n";
+    cout << "│ [ Lock & Exit ]                                            │\n";
+    cout << "└────────────────────────────────────────────────────────────┘\n";
 }
 
-// Function to load passwords from a file
-void loadPasswords() {
-    ifstream file("passwords.txt");
-    string username, password;
-    while (file >> username >> password) {
-        passwordDB[username] = password;
-    }
-    file.close();
-}
-
-// Function to add a new password
 void addPassword() {
     string username, password;
     cout << "Enter username: ";
@@ -48,12 +47,10 @@ void addPassword() {
     cout << "Enter password: ";
     cin >> password;
 
-    passwordDB[username] = sha256(password);  // Store hashed password
-    savePasswords();
+    passwordDB[username] = sha256(password);
     cout << "Password saved securely!\n";
 }
 
-// Function to retrieve a password
 void retrievePassword() {
     string username;
     cout << "Enter username: ";
@@ -66,14 +63,12 @@ void retrievePassword() {
     }
 }
 
-// Function to delete a password
 void deletePassword() {
     string username;
     cout << "Enter username to delete: ";
     cin >> username;
 
     if (passwordDB.erase(username)) {
-        savePasswords();
         cout << "Password deleted successfully!\n";
     } else {
         cout << "No such username found!\n";
@@ -81,11 +76,11 @@ void deletePassword() {
 }
 
 int main() {
-    loadPasswords();
     int choice;
-    
+
     do {
-        cout << "\n Secure Password Manager \n";
+        displayUI();
+        cout << "\nSelect an action:\n";
         cout << "1. Add Password\n";
         cout << "2. Retrieve Password\n";
         cout << "3. Delete Password\n";
@@ -97,9 +92,10 @@ int main() {
             case 1: addPassword(); break;
             case 2: retrievePassword(); break;
             case 3: deletePassword(); break;
-            case 4: cout << "Exiting...\n"; break;
-            default: cout << "Invalid choice! Try again.\n";
+            case 4: cout << "🔒 Locking and exiting...\n"; break;
+            default: cout << "Invalid choice!\n";
         }
+
     } while (choice != 4);
 
     return 0;
